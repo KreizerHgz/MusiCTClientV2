@@ -11,7 +11,7 @@ export default function TaskBrowse() {
     const [taskList, setTaskList] = useState(null);
 
     useEffect(() => {
-        Axios.post('https://musict-deployment-test.herokuapp.com/fetchtasks', {
+        Axios.post('https://musict-v2.herokuapp.com/fetchtasks', {
         }).then((response) => {
             console.log(response.data);
             if (response.data.message) {
@@ -45,11 +45,11 @@ export default function TaskBrowse() {
                                         </Typography>
                                         <Divider sx={{ borderBottomWidth: 3 }} />
                                         <Typography align="left" variant="body2" color="text.secondary">
-                                            Kompetansemål: {element.LearningObjective}
+                                            Utstyr/Plattform: {element.Equipment}
                                         </Typography>
                                         <Divider sx={{ borderBottomWidth: 3 }} />
                                         <Typography align="left" variant="body2" color="text.secondary">
-                                            Utstyr/Plattform: {element.Equipment}
+                                            AT Metode(r): {element.CT}
                                         </Typography>
                                     </CardContent>
                                 </CardActionArea>

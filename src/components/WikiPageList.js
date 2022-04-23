@@ -10,7 +10,7 @@ import Divider from '@mui/material/Divider';
 import Typography from '@mui/material/Typography';
 import { WikiContext } from '../WikiContext';
 
-export default function NestedList() {
+export default function WikiPageList() {
     const [openCT, setOpenCT] = React.useState(false);
 
     const handleClickCT = () => {

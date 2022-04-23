@@ -13,7 +13,7 @@ export default function Wiki() {
     const [content, setContent] = React.useState(null);
 
     React.useEffect(() => {
-        Axios.post('https://musict-deployment-test.herokuapp.com/fetchwikipage', {
+        Axios.post('https://musict-v2.herokuapp.com/fetchwikipage', {
             title: wiki
         }).then((response) => {
             console.log(response.data);
@@ -28,7 +28,7 @@ export default function Wiki() {
 
     React.useEffect(() => {
         if (wiki) {
-            Axios.post('https://musict-deployment-test.herokuapp.com/fetchwikipage', {
+            Axios.post('https://musict-v2.herokuapp.com/fetchwikipage', {
                 title: wiki
             }).then((response) => {
                 console.log(response.data);

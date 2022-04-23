@@ -30,13 +30,13 @@ export default function LoginRegister() {
 
 
     const register = () => {
-        Axios.post('https://musict-deployment-test.herokuapp.com/register', { username: usernameReg, password: passwordReg }).then((response) => {
+        Axios.post('https://musict-v2.herokuapp.com/register', { username: usernameReg, password: passwordReg }).then((response) => {
             console.log(response);
         });
     };
 
     const login = () => {
-        Axios.post('https://musict-deployment-test.herokuapp.com/login', { username: username, password: password }).then((response) => {
+        Axios.post('https://musict-v2.herokuapp.com/login', { username: username, password: password }).then((response) => {
             if (response.data.message) {
             } else {
                 setValue(response.data[0].ID);

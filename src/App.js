@@ -13,6 +13,7 @@ import WikiCreate from './pages/WikiCreate';
 import { WikiContext } from './WikiContext';
 import MyTasks from './pages/MyTasks';
 import EditTask from './pages/EditTask';
+import About from './pages/About';
 
 const theme = createTheme({
   palette: {
@@ -77,6 +78,7 @@ function App() {
               <Routes>
                 <Route path="/" element={<FrontPage />} />
                 <Route path="/wiki" element={<Wiki />} />
+                <Route path="/about" element={<About />} />
                 <Route path="/wikicreate" element={<WikiCreate />} />
                 <Route path="/lagoppgave" element={<TaskCreate />} />
                 <Route path="/seoppgaver" element={<TaskBrowse />} />

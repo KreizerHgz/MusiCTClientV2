@@ -33,7 +33,7 @@ export default function Navbar() {
 
     return (
         <Box sx={{ flexGrow: 1, height: "64px" }}>
-            <AppBar position="static" color='' sx={{ height: "64px" }}>
+            <AppBar position="relative" color='' sx={{ height: "64px" }}>
                 <Toolbar sx={{ height: "64px" }}>
                     <Button disabled></Button>
                     <Typography variant="h4" sx={{ flexGrow: 1 }} component={Link} to="/" style={{ textDecoration: 'none', color: 'unset' }}>

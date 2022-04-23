@@ -1,7 +1,7 @@
 import '../App.css';
 import { useContext, useEffect, useState } from 'react';
 import Typography from '@mui/material/Typography';
-import { Box, Button, Card, CardActionArea, CardContent, Divider, FormControl, Grid, ListItemText, MenuItem, Modal, styled, TextField } from '@mui/material';
+import { Box, Button, Card, CardActionArea, CardContent, Checkbox, Divider, Drawer, FormControl, FormControlLabel, Grid, IconButton, List, ListItemText, MenuItem, Modal, styled, TextField } from '@mui/material';
 import Navbar from '../components/Navbar';
 import { makeStyles } from "@material-ui/core/styles";
 import { Link, useNavigate } from 'react-router-dom';
@@ -9,6 +9,7 @@ import Axios from 'axios';
 import { UserContext } from '../UserContext';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 
 const CssTextField = styled(TextField)({
     '& .MuiOutlinedInput-root': {
@@ -42,18 +43,42 @@ const useStyles = makeStyles({
             borderColor: "white"
         }
     },
+    disabled: {
+        width: 250,
+        "& .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline": {
+            borderColor: "black"
+        },
+        "&:hover .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline": {
+            borderColor: "black"
+        },
+        "& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline": {
+            borderColor: "black"
+        }
+    },
     icon: {
         fill: 'white',
     },
 });
 
+const DrawerHeader = styled('div')(({ theme }) => ({
+    display: 'flex',
+    alignItems: 'center',
+    padding: theme.spacing(0, 1),
+    justifyContent: 'flex-start',
+}));
+
+const drawerWidth = 250;
+
 export default function TaskCreate() {
 
     const [grade, setGrade] = useState("");
-    const [learningObjective, setLearningObjective] = useState("");
-    const [equipment, setEquipment] = useState("");
+    const [learningObjective, setLearningObjective] = useState([]);
+    const [equipment, setEquipment] = useState([]);
+    const [CT, setCT] = useState([]);
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
+    const [evaluation, setEvaluation] = useState("");
+    const [outcome, setOutcome] = useState("");
     const [succeedes, setSucceedes] = useState(null);
     const [preceedes, setPreceedes] = useState(null);
 
@@ -65,12 +90,18 @@ export default function TaskCreate() {
     const { value } = useContext(UserContext);
     const [otherTasks, setOtherTasks] = useState(null);
 
+    const [searchGrade, setSearchGrade] = useState(true);
+    const [searchLO, setSearchLO] = useState(true);
+    const [searchEquip, setSearchEquip] = useState(true);
+    const [searchCT, setSearchCT] = useState(true);
+
     useEffect(() => {
         if (grade === "") {
             setGradeDefined(false);
         }
         else {
             setGradeDefined(true);
+            setLearningObjective([]);
         }
     }, [grade, gradeDefined]);
 
@@ -80,12 +111,13 @@ export default function TaskCreate() {
         if (submitted === false) {
         }
         else if (submitted === true) {
+            alert("Oppgaven er lagret");
             return navigate("/");
         }
     }, [submitted, navigate]);
 
     useEffect(() => {
-        Axios.post('https://musict-deployment-test.herokuapp.com/fetchusertasks', {
+        Axios.post('https://musict-v2.herokuapp.com/fetchusertasks', {
             userID: value
         }).then((response) => {
             console.log(response.data);
@@ -103,16 +135,20 @@ export default function TaskCreate() {
         console.log("Preceedes:", preceedes);
     }, [succeedes, preceedes]);
 
-    const save = () => {
-        Axios.post('https://musict-deployment-test.herokuapp.com/submittask', {
+    const save = (int) => {
+        Axios.post('https://musict-v2.herokuapp.com/submittask', {
             grade: grade,
             learningObjective: learningObjective,
             equipment: equipment,
+            CT: CT,
             title: title,
+            evaluation: evaluation,
+            outcome: outcome,
             description: description,
             createdBy: value,
             succeedes: succeedes,
-            preceedes: preceedes
+            preceedes: preceedes,
+            isPrivate: int
         }).then(setSubmitted(true));
     };
 
@@ -121,7 +157,7 @@ export default function TaskCreate() {
     const [open, setOpen] = useState(false);
     const handleClose = () => setOpen(false);
     const handleOpen = (e) => {
-        Axios.post('https://musict-deployment-test.herokuapp.com/fetchwikipage', {
+        Axios.post('https://musict-v2.herokuapp.com/fetchwikipage', {
             title: e
         }).then((response) => {
             console.log(response.data);
@@ -140,24 +176,177 @@ export default function TaskCreate() {
     const handleCloseSimilar = () => setOpenSimilar(false);
 
     const findTasks = () => {
-        Axios.post('https://musict-deployment-test.herokuapp.com/fetchsimilartasks', {
-            learningObjective: learningObjective,
-            equipment: equipment
-        }).then((response) => {
-            console.log(response.data);
-            if (response.data.message) {
-                alert(response.data.message);
-            }
-            else {
-                setSimilarTasks(response.data);
-                setOpenSimilar(true);
-            }
-        })
+        handleCloseSearchDialogue();
+        if (searchGrade && !searchLO && !searchEquip && !searchCT) {
+            Axios.post('https://musict-v2.herokuapp.com/fetchsimilartasks', {
+                grade: grade
+            }).then((response) => {
+                console.log(response.data);
+                if (response.data.message) {
+                    alert(response.data.message);
+                }
+                else {
+                    setSimilarTasks(response.data);
+                    setOpenSimilar(true);
+                }
+            })
+        }
+        else if (searchGrade && !searchLO && searchEquip && !searchCT) {
+            Axios.post('https://musict-v2.herokuapp.com/fetchsimilartasks', {
+                grade: grade,
+                equipment: equipment
+            }).then((response) => {
+                console.log(response.data);
+                if (response.data.message) {
+                    alert(response.data.message);
+                }
+                else {
+                    setSimilarTasks(response.data);
+                    setOpenSimilar(true);
+                }
+            })
+        }
+        else if (searchGrade && !searchLO && !searchEquip && searchCT) {
+            Axios.post('https://musict-v2.herokuapp.com/fetchsimilartasks', {
+                grade: grade,
+                CT: CT
+            }).then((response) => {
+                console.log(response.data);
+                if (response.data.message) {
+                    alert(response.data.message);
+                }
+                else {
+                    setSimilarTasks(response.data);
+                    setOpenSimilar(true);
+                }
+            })
+        }
+        else if (searchGrade && !searchLO && searchEquip && searchCT) {
+            Axios.post('https://musict-v2.herokuapp.com/fetchsimilartasks', {
+                grade: grade,
+                equipment: equipment,
+                CT: CT
+            }).then((response) => {
+                console.log(response.data);
+                if (response.data.message) {
+                    alert(response.data.message);
+                }
+                else {
+                    setSimilarTasks(response.data);
+                    setOpenSimilar(true);
+                }
+            })
+        }
+        else if (searchLO && !searchEquip && !searchCT) {
+            Axios.post('https://musict-v2.herokuapp.com/fetchsimilartasks', {
+                learningObjective: learningObjective
+            }).then((response) => {
+                console.log(response.data);
+                if (response.data.message) {
+                    alert(response.data.message);
+                }
+                else {
+                    setSimilarTasks(response.data);
+                    setOpenSimilar(true);
+                }
+            })
+        }
+        else if (searchLO && searchEquip && !searchCT) {
+            Axios.post('https://musict-v2.herokuapp.com/fetchsimilartasks', {
+                learningObjective: learningObjective,
+                equipment: equipment
+            }).then((response) => {
+                console.log(response.data);
+                if (response.data.message) {
+                    alert(response.data.message);
+                }
+                else {
+                    setSimilarTasks(response.data);
+                    setOpenSimilar(true);
+                }
+            })
+        }
+        else if (searchLO && !searchEquip && searchCT) {
+            Axios.post('https://musict-v2.herokuapp.com/fetchsimilartasks', {
+                learningObjective: learningObjective,
+                CT: CT
+            }).then((response) => {
+                console.log(response.data);
+                if (response.data.message) {
+                    alert(response.data.message);
+                }
+                else {
+                    setSimilarTasks(response.data);
+                    setOpenSimilar(true);
+                }
+            })
+        }
+        else if (searchLO && searchEquip && searchCT) {
+            Axios.post('https://musict-v2.herokuapp.com/fetchsimilartasks', {
+                learningObjective: learningObjective,
+                equipment: equipment,
+                CT: CT
+            }).then((response) => {
+                console.log(response.data);
+                if (response.data.message) {
+                    alert(response.data.message);
+                }
+                else {
+                    setSimilarTasks(response.data);
+                    setOpenSimilar(true);
+                }
+            })
+        }
+        else if (!searchGrade && !searchLO && !searchEquip && searchCT) {
+            Axios.post('https://musict-v2.herokuapp.com/fetchsimilartasks', {
+                CT: CT
+            }).then((response) => {
+                console.log(response.data);
+                if (response.data.message) {
+                    alert(response.data.message);
+                }
+                else {
+                    setSimilarTasks(response.data);
+                    setOpenSimilar(true);
+                }
+            })
+        }
+        else if (!searchGrade && !searchLO && searchEquip && !searchCT) {
+            Axios.post('https://musict-v2.herokuapp.com/fetchsimilartasks', {
+                equipment: equipment
+            }).then((response) => {
+                console.log(response.data);
+                if (response.data.message) {
+                    alert(response.data.message);
+                }
+                else {
+                    setSimilarTasks(response.data);
+                    setOpenSimilar(true);
+                }
+            })
+        }
+        else if (!searchGrade && !searchLO && searchEquip && searchCT) {
+            Axios.post('https://musict-v2.herokuapp.com/fetchsimilartasks', {
+                equipment: equipment,
+                CT: CT
+            }).then((response) => {
+                console.log(response.data);
+                if (response.data.message) {
+                    alert(response.data.message);
+                }
+                else {
+                    setSimilarTasks(response.data);
+                    setOpenSimilar(true);
+                }
+            })
+        }
     }
 
     const importTask = (e) => {
         setTitle(e.Title);
         setDescription(e.Description);
+        setEvaluation(e.Evaluation);
+        setOutcome(e.Outcome);
         setOpenSimilar(false);
         console.log(e, title, description);
     }
@@ -165,6 +354,119 @@ export default function TaskCreate() {
     const [openCreatorInfo, setOpenCreatorInfo] = useState(false);
     const handleCloseCreatorInfo = () => setOpenCreatorInfo(false);
     const handleOpenCreatorInfo = () => setOpenCreatorInfo(true);
+
+    const [openSaveDialogue, setOpenSaveDialogue] = useState(false);
+    const handleCloseSaveDialogue = () => setOpenSaveDialogue(false);
+    const handleOpenSaveDialogue = () => setOpenSaveDialogue(true);
+
+    const [openSearchDialogue, setOpenSearchDialogue] = useState(false);
+    const handleCloseSearchDialogue = () => setOpenSearchDialogue(false);
+    const handleOpenSearchDialogue = () => setOpenSearchDialogue(true);
+
+    const updateLO = (e) => {
+        setLearningObjective(
+            typeof e === 'string' ? e.split('|') : e,
+        );
+    }
+
+    const updateEq = (e) => {
+        setEquipment(
+            typeof e === 'string' ? e.split(',') : e,
+        );
+    }
+
+    const updateCT = (e) => {
+        setCT(
+            typeof e === 'string' ? e.split(',') : e,
+        );
+    }
+
+    const LOSet1 = [
+        "utøve et repertoar av sangleker, sanger og danser hentet fra elevenes nære musikkultur og fra kulturarven",
+        "utforske og eksperimentere med puls, rytme, tempo, klang, melodi, dynamikk, harmoni og form i dans, med stemmen og i spill på instrumenter",
+        "leke med musikkens grunnelementer gjennom lyd og stemme, lage mønstre og sette sammen mønstrene til enkle improvisasjoner og komposisjoner, også med digitale verktøy",
+        "formidle opplevelser av ulike musikalske uttrykk gjennom samtale og kunstneriske uttrykksformer"
+    ];
+
+    const LOSet2 = [
+        "utøve og utforske et repertoar av sanger og danser fra ulike musikkulturer, inkludert samisk musikkultur",
+        "synge og spille på instrumenter alene og sammen med andre ved bruk av gehør og enkel notasjon",
+        "eksperimentere med rytmer, melodier og andre grunnelementer, sette sammen mønstre til komposisjoner, også ved bruk av digitale verktøy, og beskrive arbeidsprosesser og resultater",
+        "formidle egne musikkopplevelser og beskrive bruk av musikalske virkemidler ved hjelp av enkle fagbegreper",
+        "samtale om og reflektere over hvordan musikk skaper mening når den brukes i ulike sosiale sammenhenger"
+    ];
+
+    const LOSet3 = [
+        "utøve et repertoar av musikk, sang, andre vokale uttrykk og dans fra samtiden og historien",
+        "utforske og drøfte hvordan musikk fra fortiden påvirker dagens musikk",
+        "øve inn og framføre sang og musikk, i samspill eller individuelt, gehørbasert og ved bruk av enkle notasjonsteknikker",
+        "lytte, eksperimentere og skape nye uttrykk med instrumenter, kropp, stemme eller lyd fra andre kilder, og presentere resultatet",
+        "bruke teknologi og digitale verktøy til å skape, øve inn og bearbeide musikk",
+        "bruke fagbegreper i beskrivelse av og refleksjon over arbeidsprosesser, resultater, musikalske uttrykk og virkemidler",
+        "utforske og formidle musikalske opplevelser og erfaringer",
+        "undersøke hvordan kjønn, kjønnsroller og seksualitet fremstilles i musikk og dans i det offentlige rom, og skape uttrykk som utfordrer stereotypier",
+        "reflektere over hvordan musikk kan spille ulike roller for utvikling av individer og gruppers identitet"
+    ];
+
+    const LOSet4 = [
+        "utøve et variert repertoar av musikk, sang, andre vokale uttrykk og dans",
+        "reflektere over hvordan musikalske tradisjoner, inkludert samiske musikktradisjoner, bevares og fornyes",
+        "samarbeide med andre om å planlegge og gjennomføre øvingsprosesser hvor det inngår selvvalgt sang, andre vokale uttrykk, spill på instrumenter eller dans, og formidle resultatet i gruppe eller individuelt",
+        "skape og programmere musikalske forløp ved å eksperimentere med lyd fra ulike kilder",
+        "utforske og formidle musikalske opplevelser og erfaringer, og reflektere over bruk av musikalske virkemidler",
+        "lytte og prøve ut ulike uttrykk og begrunne valg i skapende prosesser fra idé til ferdig resultat",
+        "bruke gehør og notasjonsteknikker som støtte i skapende arbeid",
+        "bruke relevante fagbegreper i skapende arbeid og i refleksjon over prosesser og resultater",
+        "utforske og reflektere over hvordan musikk, sang og dans som estetiske uttrykk er påvirket av og uttrykk for historiske og samfunnsmessige forhold, og skape musikalske uttrykk som tar opp utfordringer i samtiden",
+        "utforske og drøfte musikkens og dansens betydning i samfunnet og etiske problemstillinger knyttet til musikalske ytringer og musikkulturer"
+    ];
+
+    const Equip = [
+        "Instrument - Gitar",
+        "Instrument - Piano",
+        "Instrument - Slagverk",
+        "Scratch",
+        "Sonic Pi",
+        "Arduino",
+        "Digital Audio Workstation"
+    ]
+
+    const CTmethods = [
+        "Logikk",
+        "Algoritmer",
+        "Dekomposisjon",
+        "Mønstre",
+        "Abstraksjon",
+        "Evaluering"
+    ];
+
+    const [openDrawer, setOpenDrawer] = useState(false);
+
+    const handleDrawerOpen = () => {
+        setOpenDrawer(true);
+    };
+
+    const handleDrawerClose = () => {
+        setOpenDrawer(false);
+    };
+
+
+    const reviewQuestions = [
+        "Om passelig, er oppgaven utforskende?",
+        "Tar oppgaven hensyn til elevenes kulturelle bakgrunn?",
+        "Gir oppgaven tilstrekkelig utfordring for alle elever?",
+        "Er språkbruken tilpasset algoritmisk tenkning? (Se CTL i Wiki)"
+    ]
+
+    const [currentQuestion, setCurrentQuestion] = useState(reviewQuestions[0]);
+
+    const UpdateQuestionPrev = () => {
+        setCurrentQuestion(reviewQuestions[reviewQuestions.indexOf(currentQuestion) - 1]);
+    }
+
+    const UpdateQuestionNext = () => {
+        setCurrentQuestion(reviewQuestions[reviewQuestions.indexOf(currentQuestion) + 1]);
+    }
 
 
     return (
@@ -197,7 +499,7 @@ export default function TaskCreate() {
                         <FormControl >
                             <TextField
                                 value={grade}
-                                label="Klassenivå"
+                                label="Klassenivå*"
                                 onChange={(e) => { setGrade(e.target.value) }}
                                 className={classes.root}
                                 select
@@ -215,267 +517,168 @@ export default function TaskCreate() {
                     <Grid item xs={2}>
                         <FormControl >
                             <TextField
-                                value={learningObjective}
-                                label={!gradeDefined ? ("Velg klassenivå først") : ("Kompetansemål")}
-                                onChange={(e) => { setLearningObjective(e.target.value) }}
-                                className={classes.root}
+                                label={!gradeDefined ? ("Velg klassenivå først") : ("Kompetansemål*")}
                                 disabled={!(gradeDefined)}
+                                className={!gradeDefined ? (classes.disabled) : (classes.root)}
                                 select
                                 SelectProps={{
-                                    classes: { icon: classes.icon }
+                                    classes: { icon: classes.icon },
+                                    multiple: true,
+                                    value: learningObjective,
+                                    onChange: (e) => { updateLO(e.target.value) },
+                                    renderValue: (selected) => selected.join("| ")
                                 }}
                             >
                                 {grade === "1. - 2. trinn" ? (
-                                    <MenuItem value={"Utøve et repertoar av sangleker, sanger og danser hentet fra elevenes nære musikkultur og fra kulturarven"}>
-                                        Utøve et repertoar av sangleker, sanger og danser hentet fra elevenes nære musikkultur og fra kulturarven</MenuItem>
-                                ) : []}
-                                {grade === "1. - 2. trinn" ? (
-                                    <MenuItem value={"Utforske og eksperimentere med puls, rytme, tempo, klang, melodi, dynamikk, harmoni og form i dans, med stemmen og i spill på instrumenter"}>
-                                        Utforske og eksperimentere med puls, rytme, tempo, klang, melodi, dynamikk, harmoni og form i dans, med stemmen og i spill på instrumenter</MenuItem>
-                                ) : []}
-                                {grade === "1. - 2. trinn" ? (
-                                    <MenuItem value={"Leke med musikkens grunnelementer gjennom lyd og stemme, lage mønstre og sette sammen mønstrene til enkle improvisasjoner og komposisjoner, også med digitale verktøy"}>
-                                        Leke med musikkens grunnelementer gjennom lyd og stemme, lage mønstre og sette sammen mønstrene til enkle improvisasjoner og komposisjoner, også med digitale verktøy</MenuItem>
-                                ) : []}
-                                {grade === "1. - 2. trinn" ? (
-                                    <MenuItem value={"Formidle opplevelser av ulike musikalske uttrykk gjennom samtale og kunstneriske uttrykksformer"}>
-                                        Formidle opplevelser av ulike musikalske uttrykk gjennom samtale og kunstneriske uttrykksformer</MenuItem>
-                                ) : []}
-
+                                    LOSet1.map((item) => (
+                                        <MenuItem key={item} value={item}>
+                                            <Checkbox checked={learningObjective.indexOf(item) > -1} />
+                                            <ListItemText>
+                                                {item}
+                                            </ListItemText>
+                                        </MenuItem>
+                                    ))
+                                ) : (<></>)
+                                }
                                 {grade === "3. - 4. trinn" ? (
-                                    <MenuItem value={"Utøve og utforske et repertoar av sanger og danser fra ulike musikkulturer, inkludert samisk musikkultur"}>
-                                        Utøve og utforske et repertoar av sanger og danser fra ulike musikkulturer, inkludert samisk musikkultur</MenuItem>
-                                ) : []}
-                                {grade === "3. - 4. trinn" ? (
-                                    <MenuItem value={"Synge og spille på instrumenter alene og sammen med andre ved bruk av gehør og enkel notasjon"}>
-                                        Synge og spille på instrumenter alene og sammen med andre ved bruk av gehør og enkel notasjon</MenuItem>
-                                ) : []}
-                                {grade === "3. - 4. trinn" ? (
-                                    <MenuItem value={"Eksperimentere med rytmer, melodier og andre grunnelementer, sette sammen mønstre til komposisjoner, også ved bruk av digitale verktøy, og beskrive arbeidsprosesser og resultater"}>
-                                        Eksperimentere med rytmer, melodier og andre grunnelementer, sette sammen mønstre til komposisjoner, også ved bruk av digitale verktøy, og beskrive arbeidsprosesser og resultater</MenuItem>
-                                ) : []}
-                                {grade === "3. - 4. trinn" ? (
-                                    <MenuItem value={"Formidle egne musikkopplevelser og beskrive bruk av musikalske virkemidler ved hjelp av enkle fagbegreper"}>
-                                        Formidle egne musikkopplevelser og beskrive bruk av musikalske virkemidler ved hjelp av enkle fagbegreper</MenuItem>
-                                ) : []}
-                                {grade === "3. - 4. trinn" ? (
-                                    <MenuItem value={"Samtale om og reflektere over hvordan musikk skaper mening når den brukes i ulike sosiale sammenhenger"}>
-                                        Samtale om og reflektere over hvordan musikk skaper mening når den brukes i ulike sosiale sammenhenger</MenuItem>
-                                ) : []}
-
+                                    LOSet2.map((item) => (
+                                        <MenuItem key={item} value={item}>
+                                            <Checkbox checked={learningObjective.indexOf(item) > -1} />
+                                            <ListItemText>
+                                                {item}
+                                            </ListItemText>
+                                        </MenuItem>
+                                    ))
+                                ) : (<></>)
+                                }
                                 {grade === "5. - 7. trinn" ? (
-                                    <MenuItem value={"Utøve et repertoar av musikk, sang, andre vokale uttrykk og dans fra samtiden og historien"}>
-                                        Utøve et repertoar av musikk, sang, andre vokale uttrykk og dans fra samtiden og historien</MenuItem>
-                                ) : []}
-                                {grade === "5. - 7. trinn" ? (
-                                    <MenuItem value={"Utforske og drøfte hvordan musikk fra fortiden påvirker dagens musikk"}>
-                                        Utforske og drøfte hvordan musikk fra fortiden påvirker dagens musikk</MenuItem>
-                                ) : []}
-                                {grade === "5. - 7. trinn" ? (
-                                    <MenuItem value={"Øve inn og framføre sang og musikk, i samspill eller individuelt, gehørbasert og ved bruk av enkle notasjonsteknikker"}>
-                                        Øve inn og framføre sang og musikk, i samspill eller individuelt, gehørbasert og ved bruk av enkle notasjonsteknikker</MenuItem>
-                                ) : []}
-                                {grade === "5. - 7. trinn" ? (
-                                    <MenuItem value={"Lytte, eksperimentere og skape nye uttrykk med instrumenter, kropp, stemme eller lyd fra andre kilder, og presentere resultatet"}>
-                                        Lytte, eksperimentere og skape nye uttrykk med instrumenter, kropp, stemme eller lyd fra andre kilder, og presentere resultatet</MenuItem>
-                                ) : []}
-                                {grade === "5. - 7. trinn" ? (
-                                    <MenuItem value={"Bruke teknologi og digitale verktøy til å skape, øve inn og bearbeide musikk"}>
-                                        Bruke teknologi og digitale verktøy til å skape, øve inn og bearbeide musikk</MenuItem>
-                                ) : []}
-                                {grade === "5. - 7. trinn" ? (
-                                    <MenuItem value={"Bruke fagbegreper i beskrivelse av og refleksjon over arbeidsprosesser, resultater, musikalske uttrykk og virkemidler"}>
-                                        Bruke fagbegreper i beskrivelse av og refleksjon over arbeidsprosesser, resultater, musikalske uttrykk og virkemidler</MenuItem>
-                                ) : []}
-                                {grade === "5. - 7. trinn" ? (
-                                    <MenuItem value={"Utforske og formidle musikalske opplevelser og erfaringer"}>
-                                        Utforske og formidle musikalske opplevelser og erfaringer</MenuItem>
-                                ) : []}
-                                {grade === "5. - 7. trinn" ? (
-                                    <MenuItem value={"Undersøke hvordan kjønn, kjønnsroller og seksualitet fremstilles i musikk og dans i det offentlige rom, og skape uttrykk som utfordrer stereotypier"}>
-                                        Undersøke hvordan kjønn, kjønnsroller og seksualitet fremstilles i musikk og dans i det offentlige rom, og skape uttrykk som utfordrer stereotypier</MenuItem>
-                                ) : []}
-                                {grade === "5. - 7. trinn" ? (
-                                    <MenuItem value={"Reflektere over hvordan musikk kan spille ulike roller for utvikling av individer og gruppers identitet"}>
-                                        Reflektere over hvordan musikk kan spille ulike roller for utvikling av individer og gruppers identitet</MenuItem>
-                                ) : []}
-
+                                    LOSet3.map((item) => (
+                                        <MenuItem key={item} value={item}>
+                                            <Checkbox checked={learningObjective.indexOf(item) > -1} />
+                                            <ListItemText>
+                                                {item}
+                                            </ListItemText>
+                                        </MenuItem>
+                                    ))
+                                ) : (<></>)
+                                }
                                 {grade === "8. - 10. trinn" ? (
-                                    <MenuItem value={"Utøve et variert repertoar av musikk, sang, andre vokale uttrykk og dans"}>
-                                        Utøve et variert repertoar av musikk, sang, andre vokale uttrykk og dans</MenuItem>
-                                ) : []}
-                                {grade === "8. - 10. trinn" ? (
-                                    <MenuItem value={"Reflektere over hvordan musikalske tradisjoner, inkludert samiske musikktradisjoner, bevares og fornyes"}>
-                                        Reflektere over hvordan musikalske tradisjoner, inkludert samiske musikktradisjoner, bevares og fornyes</MenuItem>
-                                ) : []}
-                                {grade === "8. - 10. trinn" ? (
-                                    <MenuItem value={"Samarbeide med andre om å planlegge og gjennomføre øvingsprosesser hvor det inngår selvvalgt sang, andre vokale uttrykk, spill på instrumenter eller dans, og formidle resultatet i gruppe eller individuelt"}>
-                                        Samarbeide med andre om å planlegge og gjennomføre øvingsprosesser hvor det inngår selvvalgt sang, andre vokale uttrykk, spill på instrumenter eller dans, og formidle resultatet i gruppe eller individuelt</MenuItem>
-                                ) : []}
-                                {grade === "8. - 10. trinn" ? (
-                                    <MenuItem value={"Skape og programmere musikalske forløp ved å eksperimentere med lyd fra ulike kilder"}>
-                                        Skape og programmere musikalske forløp ved å eksperimentere med lyd fra ulike kilder</MenuItem>
-                                ) : []}
-                                {grade === "8. - 10. trinn" ? (
-                                    <MenuItem value={"Utforske og formidle musikalske opplevelser og erfaringer, og reflektere over bruk av musikalske virkemidler"}>
-                                        Utforske og formidle musikalske opplevelser og erfaringer, og reflektere over bruk av musikalske virkemidler</MenuItem>
-                                ) : []}
-                                {grade === "8. - 10. trinn" ? (
-                                    <MenuItem value={"Lytte og prøve ut ulike uttrykk og begrunne valg i skapende prosesser fra idé til ferdig resultat"}>
-                                        Lytte og prøve ut ulike uttrykk og begrunne valg i skapende prosesser fra idé til ferdig resultat</MenuItem>
-                                ) : []}
-                                {grade === "8. - 10. trinn" ? (
-                                    <MenuItem value={"Bruke gehør og notasjonsteknikker som støtte i skapende arbeid"}>
-                                        Bruke gehør og notasjonsteknikker som støtte i skapende arbeid</MenuItem>
-                                ) : []}
-                                {grade === "8. - 10. trinn" ? (
-                                    <MenuItem value={"Bruke relevante fagbegreper i skapende arbeid og i refleksjon over prosesser og resultater"}>
-                                        Bruke relevante fagbegreper i skapende arbeid og i refleksjon over prosesser og resultater</MenuItem>
-                                ) : []}
-                                {grade === "8. - 10. trinn" ? (
-                                    <MenuItem value={"Utforske og reflektere over hvordan musikk, sang og dans som estetiske uttrykk er påvirket av og uttrykk for historiske og samfunnsmessige forhold, og skape musikalske uttrykk som tar opp utfordringer i samtiden"}>
-                                        Utforske og reflektere over hvordan musikk, sang og dans som estetiske uttrykk er påvirket av og uttrykk for historiske og samfunnsmessige forhold, og skape musikalske uttrykk som tar opp utfordringer i samtiden</MenuItem>
-                                ) : []}
-                                {grade === "8. - 10. trinn" ? (
-                                    <MenuItem value={"Utforske og drøfte musikkens og dansens betydning i samfunnet og etiske problemstillinger knyttet til musikalske ytringer og musikkulturer"}>
-                                        Utforske og drøfte musikkens og dansens betydning i samfunnet og etiske problemstillinger knyttet til musikalske ytringer og musikkulturer</MenuItem>
-                                ) : []}
+                                    LOSet4.map((item) => (
+                                        <MenuItem key={item} value={item}>
+                                            <Checkbox checked={learningObjective.indexOf(item) > -1} />
+                                            <ListItemText>
+                                                {item}
+                                            </ListItemText>
+                                        </MenuItem>
+                                    ))
+                                ) : (<></>)
+                                }
                             </TextField>
                         </FormControl>
                     </Grid>
                     <Grid item xs={2}>
                         <FormControl >
                             <TextField
-                                value={equipment}
-                                label="Utstyr/Plattform"
-                                onChange={(e) => { setEquipment(e.target.value) }}
+                                label="Utstyr/Plattform*"
                                 className={classes.root}
                                 select
                                 SelectProps={{
-                                    classes: { icon: classes.icon }
+                                    classes: { icon: classes.icon },
+                                    multiple: true,
+                                    value: equipment,
+                                    onChange: (e) => { updateEq(e.target.value) },
+                                    renderValue: (selected) => selected.join(", ")
                                 }}
                             >
-                                {equipment !== "Instrument - Gitar" ? (
-                                    <MenuItem value={"Instrument - Gitar"}>
+                                {Equip.map((item) => (
+                                    <MenuItem key={item} value={item}>
+                                        <Checkbox checked={equipment.indexOf(item) > -1} />
                                         <ListItemText>
-                                            Instrument - Gitar
+                                            {item}
                                         </ListItemText>
-                                        <Button onClick={(e) => { e.stopPropagation(); handleOpen("Instrument - Gitar") }}>
+                                        <Button onClick={(e) => { e.stopPropagation(); handleOpen(item) }}>
                                             <HelpOutlineIcon />
                                         </Button>
                                     </MenuItem>
-                                ) : (
-                                    <MenuItem value={"Instrument - Gitar"}>
-                                        Instrument - Gitar
-                                    </MenuItem>
-                                )}
-                                {equipment !== "Instrument - Piano" ? (
-                                    <MenuItem value={"Instrument - Piano"}>
+                                ))}
+                                <MenuItem key={"Ekstra utstyr ikke nødvendig"} value={"Ekstra utstyr ikke nødvendig"}>
+                                    <Checkbox checked={equipment.indexOf("Ekstra utstyr ikke nødvendig") > -1} />
+                                    <ListItemText>
+                                        {"Ekstra utstyr ikke nødvendig"}
+                                    </ListItemText>
+                                </MenuItem>
+                            </TextField>
+                        </FormControl>
+                    </Grid>
+                    <Grid item xs={2}>
+                        <FormControl >
+                            <TextField
+                                label="AT metode*"
+                                className={classes.root}
+                                select
+                                SelectProps={{
+                                    classes: { icon: classes.icon },
+                                    multiple: true,
+                                    value: CT,
+                                    onChange: (e) => { updateCT(e.target.value) },
+                                    renderValue: (selected) => selected.join(", ")
+                                }}
+                            >
+                                {CTmethods.map((item) => (
+                                    <MenuItem key={item} value={item}>
+                                        <Checkbox checked={CT.indexOf(item) > -1} />
                                         <ListItemText>
-                                            Instrument - Piano
+                                            {item}
                                         </ListItemText>
-                                        <Button onClick={(e) => { e.stopPropagation(); handleOpen("Instrument - Piano") }}>
+                                        <Button onClick={(e) => { e.stopPropagation(); handleOpen(item) }}>
                                             <HelpOutlineIcon />
                                         </Button>
                                     </MenuItem>
-                                ) : (
-                                    <MenuItem value={"Instrument - Piano"}>
-                                        Instrument - Piano
-                                    </MenuItem>
-                                )}
-                                {equipment !== "Instrument - Slagverk" ? (
-                                    <MenuItem value={"Instrument - Slagverk"}>
-                                        <ListItemText>
-                                            Instrument - Slagverk
-                                        </ListItemText>
-                                        <Button onClick={(e) => { e.stopPropagation(); handleOpen("Instrument - Slagverk") }}>
-                                            <HelpOutlineIcon />
-                                        </Button>
-                                    </MenuItem>
-                                ) : (
-                                    <MenuItem value={"Instrument - Slagverk"}>
-                                        Instrument - Slagverk
-                                    </MenuItem>
-                                )}
-                                {equipment !== "Scratch" ? (
-                                    <MenuItem value={"Scratch"}>
-                                        <ListItemText>
-                                            Scratch
-                                        </ListItemText>
-                                        <Button onClick={(e) => { e.stopPropagation(); handleOpen("Scratch") }}>
-                                            <HelpOutlineIcon />
-                                        </Button>
-                                    </MenuItem>
-                                ) : (
-                                    <MenuItem value={"Scratch"}>
-                                        Scratch
-                                    </MenuItem>
-                                )}
-                                {equipment !== "Sonic Pi" ? (
-                                    <MenuItem value={"Sonic Pi"}>
-                                        <ListItemText>
-                                            Sonic Pi
-                                        </ListItemText>
-                                        <Button onClick={(e) => { e.stopPropagation(); handleOpen("Sonic Pi") }}>
-                                            <HelpOutlineIcon />
-                                        </Button>
-                                    </MenuItem>
-                                ) : (
-                                    <MenuItem value={"Sonic Pi"}>
-                                        Sonic Pi
-                                    </MenuItem>
-                                )}
-                                {equipment !== "Arduino" ? (
-                                    <MenuItem value={"Arduino"}>
-                                        <ListItemText>
-                                            Arduino
-                                        </ListItemText>
-                                        <Button onClick={(e) => { e.stopPropagation(); handleOpen("Arduino") }}>
-                                            <HelpOutlineIcon />
-                                        </Button>
-                                    </MenuItem>
-                                ) : (
-                                    <MenuItem value={"Arduino"}>
-                                        Arduino
-                                    </MenuItem>
-                                )}
-                                {equipment !== "Digital Audio Workstation" ? (
-                                    <MenuItem value={"Digital Audio Workstation"}>
-                                        <ListItemText>
-                                            Digital Audio Workstation
-                                        </ListItemText>
-                                        <Button onClick={(e) => { e.stopPropagation(); handleOpen("Digital Audio Workstation") }}>
-                                            <HelpOutlineIcon />
-                                        </Button>
-                                    </MenuItem>
-                                ) : (
-                                    <MenuItem value={"Digital Audio Workstation"}>
-                                        Digital Audio Workstation
-                                    </MenuItem>
-                                )}
-                                <MenuItem value={"Ekstra utstyr ikke nødvendig"}>Ekstra utstyr ikke nødvendig</MenuItem>
+                                ))}
                             </TextField>
                         </FormControl>
                     </Grid>
                 </Grid>
             </Grid>
-            {learningObjective !== "" && equipment !== "" ? (
+            {(learningObjective.length > 0 && equipment.length > 0 && CT.length > 0) ? (
                 <div>
-                    <Button variant="contained" onClick={findTasks}>
+                    <Button variant="contained" onClick={handleOpenSearchDialogue}>
                         Finn lignende oppgaver
                     </Button>
                 </div>
             ) : (<></>)}
-            <CssTextField value={title} label={title ? ("") : ("Tittel")} id="custom-css-outlined-input" sx={{ width: 600, marginTop: "20px" }} onChange={(e) => { setTitle(e.target.value) }} />
+            <CssTextField value={title} label={title ? ("") : ("Tittel*")} id="custom-css-outlined-input" sx={{ width: 800, marginTop: "20px" }} onChange={(e) => { setTitle(e.target.value) }} />
             <div>
                 <CssTextField
                     id="outlined-multiline-static"
                     value={description}
-                    label={description ? ("") : ("Oppgavebeskrivelse")}
+                    label={description ? ("") : ("Oppgavebeskrivelse*")}
                     multiline
                     rows={15}
-                    sx={{ width: 600, marginTop: "20px", marginBottom: "20px" }}
+                    sx={{ width: 800, marginTop: "20px", marginBottom: "20px" }}
                     onChange={(e) => { setDescription(e.target.value) }}
+                />
+            </div>
+            <div>
+                <CssTextField
+                    id="outlined-multiline-static"
+                    value={evaluation}
+                    label={evaluation ? ("") : ("Vurdering*")}
+                    multiline
+                    rows={15}
+                    sx={{ width: 800, marginTop: "20px", marginBottom: "20px" }}
+                    onChange={(e) => { setEvaluation(e.target.value) }}
+                />
+            </div>
+            <div>
+                <CssTextField
+                    id="outlined-multiline-static"
+                    value={outcome}
+                    label={outcome ? ("") : ("Potensielt Læringsutbytte*")}
+                    multiline
+                    rows={15}
+                    sx={{ width: 800, marginTop: "20px", marginBottom: "20px" }}
+                    onChange={(e) => { setOutcome(e.target.value) }}
                 />
             </div>
             <div>
@@ -524,7 +727,13 @@ export default function TaskCreate() {
                 </FormControl>
             </div>
             <div>
-                <Button variant="contained" sx={{ margin: "20px" }} onClick={save}>Lagre</Button>
+                <Button variant="contained" onClick={handleDrawerOpen}>
+                    Se refleksjonsspørsmål
+                </Button>
+
+            </div>
+            <div>
+                <Button variant="contained" sx={{ margin: "20px" }} onClick={handleOpenSaveDialogue}>Lagre</Button>
                 <Button variant="outlined" component={Link} to="/" sx={{ margin: "20px" }}>Avbryt</Button>
             </div>
             <Modal
@@ -583,11 +792,11 @@ export default function TaskCreate() {
                                                         </Typography>
                                                         <Divider sx={{ borderBottomWidth: 3 }} />
                                                         <Typography align="left" variant="body2" color="text.secondary">
-                                                            Kompetansemål: {element.LearningObjective}
+                                                            Utstyr/Plattform: {element.Equipment}
                                                         </Typography>
                                                         <Divider sx={{ borderBottomWidth: 3 }} />
                                                         <Typography align="left" variant="body2" color="text.secondary">
-                                                            Utstyr/Plattform: {element.Equipment}
+                                                            AT Metode(r): {element.CT}
                                                         </Typography>
                                                     </CardContent>
                                                 </CardActionArea>
@@ -624,10 +833,112 @@ export default function TaskCreate() {
                         Oppgavebyggeren lar deg lage oppgaver som er tilpasset trinn, kompetansemål og utstyr som elevene trenger for å utføre oppgaven.
                         Oppgaven din kan også være koblet mot dine andre oppgaver som forrige og neste nivå dersom du ønsker en progresjon.
                         Oppgavebyggeren er lagd for å være veiledende og finner lignende oppgaver fra vår database for deg når klassenivå, kompetansemål og utstyr er definert.
-                        Du kan enten åpne oppgavesidene for disse oppgavene for inspirasjon, eller du kan importere oppgaven inn i din oppgavebygger for å modifisere oppgaven slik at den passer deg
+                        Du kan enten åpne oppgavesidene for disse oppgavene for inspirasjon, eller du kan importere oppgaven inn i din oppgavebygger for å modifisere oppgaven slik at den passer deg.
+                        Felter markert med * må fylles ut for at oppgaven kan lagres
+                    </Typography>
+                    <Typography id="modal-modal-description" sx={{ mt: 2 }} color='text.secondary'>
+                        Før du lagrer oppgaven din kan du gå gjennom oppgavebyggerens refleksjonsspørsmål.
+                        Disse er lagd for å få deg til å reflektere over kvaliteten på oppgaven din ved å stille spørsmål om spesfikke ting ved oppgaven.
+                        Å gå gjennom spørsmålene er frivillig, men gjerne ta en titt :)
                     </Typography>
                 </Box>
             </Modal>
+
+            <Modal
+                open={openSaveDialogue}
+                onClose={handleCloseSaveDialogue}
+                aria-labelledby="modal-modal-title"
+                aria-describedby="modal-modal-description"
+            >
+                <Box sx={style}>
+                    <Grid
+                        container spacing={0}
+                        align="center"
+                        justify="center"
+                        direction="column"
+                        marginTop={"20px"}
+                        marginBottom={"20px"}>
+                        <Grid container justifyContent="center">
+                            <Typography id="modal-modal-title" variant="h6" component="h2" color='text.primary'>
+                                Ønsker du at oppgaven skal lagres privat slik at den bare er tilgjengelig for deg?
+                            </Typography>
+                            <div>
+                                <Button variant="contained" sx={{ margin: "20px" }} onClick={() => { save(1) }}>Ja</Button>
+                                <Button variant="contained" sx={{ margin: "20px" }} onClick={() => { save(0) }}>Nei</Button>
+                            </div>
+                        </Grid>
+                    </Grid>
+                </Box>
+            </Modal>
+
+            <Modal
+                open={openSearchDialogue}
+                onClose={handleCloseSearchDialogue}
+                aria-labelledby="modal-modal-title"
+                aria-describedby="modal-modal-description"
+            >
+                <Box sx={style}>
+                    <Grid
+                        container spacing={0}
+                        align="center"
+                        justify="center"
+                        direction="column"
+                        marginTop={"20px"}
+                        marginBottom={"20px"}>
+                        <div>
+                            <Typography id="modal-modal-title" variant="h6" component="h2" color='text.primary'>
+                                Finn oppgaver med samme:
+                            </Typography>
+                        </div>
+                        <Grid container justifyContent="center">
+                            <div>
+                                <FormControlLabel control={<Checkbox checked={searchGrade} onChange={() => { setSearchGrade(!searchGrade) }} />} label="Klassetrinn" sx={{ color: 'text.secondary' }} />
+                                <FormControlLabel control={<Checkbox checked={searchLO} onChange={() => { setSearchLO(!searchLO) }} />} label="Kompetansemål" sx={{ color: 'text.secondary' }} />
+                                <FormControlLabel control={<Checkbox checked={searchEquip} onChange={() => { setSearchEquip(!searchEquip) }} />} label="Utstyr/Plattform" sx={{ color: 'text.secondary' }} />
+                                <FormControlLabel control={<Checkbox checked={searchCT} onChange={() => { setSearchCT(!searchCT) }} />} label="AT Metode(r)" sx={{ color: 'text.secondary' }} />
+                            </div>
+                        </Grid>
+                        <div>
+                            <Button variant="contained" sx={{ margin: "20px" }} onClick={findTasks}>Søk</Button>
+                        </div>
+                    </Grid>
+                </Box>
+            </Modal>
+
+            <Drawer
+                sx={{
+                    width: drawerWidth,
+                    flexShrink: 0,
+                    '& .MuiDrawer-paper': {
+                        width: drawerWidth,
+                    },
+                }}
+                variant="persistent"
+                anchor="right"
+                open={openDrawer}
+            >
+                <DrawerHeader>
+                    <IconButton onClick={handleDrawerClose}>
+                        {<ChevronRightIcon className={classes.icon} sx={{ marginTop: 3, marginBottom: 3, fontSize: 40 }} />}
+                    </IconButton>
+                </DrawerHeader>
+                <Divider />
+                <Typography sx={{ marginTop: "25vh" }}>
+                    {currentQuestion}
+                </Typography>
+                <div>
+                    {currentQuestion === reviewQuestions[0] ? (
+                        <Button disabled sx={{ margin: "10px", width: 75 }}></Button>) :
+                        (
+                            <Button variant="contained" sx={{ margin: "10px", width: 75 }} onClick={UpdateQuestionPrev}>Forrige</Button>
+                        )}
+                    {currentQuestion === reviewQuestions[reviewQuestions.length - 1] ? (
+                        <Button disabled sx={{ margin: "10px", width: 75 }}></Button>) :
+                        (
+                            <Button variant="contained" sx={{ margin: "10px", width: 75 }} onClick={UpdateQuestionNext}>Neste</Button>
+                        )}
+                </div>
+            </Drawer>
         </Box >
     );
 }
