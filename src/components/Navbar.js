@@ -92,7 +92,7 @@ export default function Navbar() {
                                 <Divider />
                                 <MenuItem onClick={logout}>
                                     <Logout fontSize="small" />
-                                    Logout
+                                    Logg ut
                                 </MenuItem>
                             </Menu>
                         </div>
