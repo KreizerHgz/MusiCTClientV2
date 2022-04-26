@@ -343,12 +343,24 @@ export default function TaskCreate() {
     }
 
     const importTask = (e) => {
+        if (!gradeDefined) {
+            setGrade(e.Grade);
+        }
+        if (learningObjective.length === 0) {
+            setLearningObjective(e.LearningObjective.split('|'));
+        }
+        if (equipment.length === 0) {
+            setEquipment(e.Equipment.split(','));
+        }
+        if (CT.length === 0) {
+            setCT(e.CT.split(','));
+        }
         setTitle(e.Title);
         setDescription(e.Description);
         setEvaluation(e.Evaluation);
         setOutcome(e.Outcome);
         setOpenSimilar(false);
-        console.log(e, title, description);
+        console.log("LO: " + learningObjective);
     }
 
     const [openCreatorInfo, setOpenCreatorInfo] = useState(false);
@@ -640,7 +652,7 @@ export default function TaskCreate() {
                     </Grid>
                 </Grid>
             </Grid>
-            {(learningObjective.length > 0 && equipment.length > 0 && CT.length > 0) ? (
+            {(gradeDefined || learningObjective.length > 0 || equipment.length > 0 || CT.length > 0) ? (
                 <div>
                     <Button variant="contained" onClick={handleOpenSearchDialogue}>
                         Finn lignende oppgaver
@@ -892,15 +904,30 @@ export default function TaskCreate() {
                         </div>
                         <Grid container justifyContent="center">
                             <div>
-                                <FormControlLabel control={<Checkbox checked={searchGrade} onChange={() => { setSearchGrade(!searchGrade) }} />} label="Klassetrinn" sx={{ color: 'text.secondary' }} />
-                                <FormControlLabel control={<Checkbox checked={searchLO} onChange={() => { setSearchLO(!searchLO) }} />} label="Kompetansemål" sx={{ color: 'text.secondary' }} />
-                                <FormControlLabel control={<Checkbox checked={searchEquip} onChange={() => { setSearchEquip(!searchEquip) }} />} label="Utstyr/Plattform" sx={{ color: 'text.secondary' }} />
-                                <FormControlLabel control={<Checkbox checked={searchCT} onChange={() => { setSearchCT(!searchCT) }} />} label="AT Metode(r)" sx={{ color: 'text.secondary' }} />
+                                {gradeDefined ? (
+                                    <FormControlLabel control={<Checkbox checked={searchGrade} onChange={() => { setSearchGrade(!searchGrade) }} />} label="Klassetrinn" sx={{ color: 'text.secondary' }} />
+                                ) : (<></>)}
+                                {learningObjective.length > 0 ? (
+                                    <FormControlLabel control={<Checkbox checked={searchLO} onChange={() => { setSearchLO(!searchLO) }} />} label="Kompetansemål" sx={{ color: 'text.secondary' }} />
+                                ) : (<></>)}
+                                {equipment.length > 0 ? (
+                                    <FormControlLabel control={<Checkbox checked={searchEquip} onChange={() => { setSearchEquip(!searchEquip) }} />} label="Utstyr/Plattform" sx={{ color: 'text.secondary' }} />
+                                ) : (<></>)}
+                                {CT.length > 0 ? (
+                                    <FormControlLabel control={<Checkbox checked={searchCT} onChange={() => { setSearchCT(!searchCT) }} />} label="AT Metode(r)" sx={{ color: 'text.secondary' }} />
+                                ) : (<></>)}
                             </div>
                         </Grid>
                         <div>
                             <Button variant="contained" sx={{ margin: "20px" }} onClick={findTasks}>Søk</Button>
                         </div>
+                        {(!gradeDefined || learningObjective.length === 0 || equipment.length === 0 || CT.length === 0) ? (
+                            <div>
+                                <Typography id="modal-modal-title" color='text.secondary'>
+                                    (Fyll ut flere av feltene ovenfor for å søke etter lignende oppgaver med samme verdi for de feltene)
+                                </Typography>
+                            </div>
+                        ) : (<></>)}
                     </Grid>
                 </Box>
             </Modal>
