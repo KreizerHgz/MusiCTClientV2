@@ -29,7 +29,7 @@ export default function MyTasks() {
     return (
         <Box height={"100vh"} overflow="auto">
             <Navbar />
-            <Typography variant="h3" component="div" gutterBottom color='text.primary'>Mine Oppgaver</Typography>
+            <Typography variant="h3" component="div" gutterBottom color='text.primary' marginTop="20px">Mine Oppgaver</Typography>
 
             <Grid container spacing={0}>
                 <Grid container justifyContent="center">

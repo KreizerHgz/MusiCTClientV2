@@ -68,7 +68,7 @@ export default function FrontPage() {
                 </Grid>
             </Grid >
             <Link to="/about" style={{ textDecoration: 'none' }}>
-                <Typography variant="body2" color="text.secondary" position="fixed" sx={{ top: 'auto', bottom: 10, width: window.innerWidth }}>
+                <Typography variant="body2" color="text.secondary" position="fixed" sx={{ top: 'auto', bottom: 10, width: window.innerWidth, fontSize: 24 }}>
                     Om MusiCT
                 </Typography>
             </Link>

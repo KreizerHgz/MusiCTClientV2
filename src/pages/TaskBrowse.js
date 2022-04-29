@@ -26,7 +26,7 @@ export default function TaskBrowse() {
     return (
         <Box height={"100vh"} overflow="auto">
             <Navbar />
-            <Typography variant="h3" component="div" gutterBottom color='text.primary'>Søk i oppgaver</Typography>
+            <Typography variant="h3" component="div" gutterBottom color='text.primary' marginTop="20px">Søk i oppgaver</Typography>
 
             <Grid container spacing={0}>
                 <Grid container justifyContent="center">

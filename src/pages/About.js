@@ -33,7 +33,7 @@ export default function About() {
                             Du kan også bruke andres oppgaver i din egen undervisning uten å gjøre noen endringer.
                             Ettersom dette systemet er ment for lærere trenger ikke oppgavebeskrivelsene å være ment for elever. Tenk på det når du lager dine egne oppgaver.
                         </Typography>
-                        <Typography align={"left"} color="text.secondary" marginTop="20px">
+                        <Typography align={"left"} color="text.secondary" marginTop="20px" marginBottom="50px">
                             I MusiCT er en oppgave en læringsaktivitet som utføres av elever i en klassetime.
                             De er ment til å være realtivt små og utførbare iløpet av kort tid.
                             På grunn av dette har vi lagt inn muligheten for å lenke sammen flere av oppgavene dine for å lage et lengre løp med progresjon.
