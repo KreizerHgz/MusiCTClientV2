@@ -76,8 +76,8 @@ export default function WikiPageList() {
                         <ListItemText disableTypography primary={<Typography type="body2" color="text.secondary">Dekomposisjon</Typography>}
                         />
                     </ListItemButton>
-                    <ListItemButton sx={{ pl: 4 }} onClick={() => setWiki("Møsntre")}>
-                        <ListItemText disableTypography primary={<Typography type="body2" color="text.secondary">Møsntre</Typography>}
+                    <ListItemButton sx={{ pl: 4 }} onClick={() => setWiki("Mønstre")}>
+                        <ListItemText disableTypography primary={<Typography type="body2" color="text.secondary">Mønstre</Typography>}
                         />
                     </ListItemButton>
                     <ListItemButton sx={{ pl: 4 }} onClick={() => setWiki("Abstraksjon")}>
